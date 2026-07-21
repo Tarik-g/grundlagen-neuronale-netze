@@ -1,0 +1,23 @@
+# Virtuelle Python-Umgebungen
+venv/
+.venv/
+env/
+
+# Python Cache-Dateien
+__pycache__/
+*.py[cod]
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# IDE Einstellungen
+.vscode/
+.idea/
+
+# Betriebssystem-Dateien
+.DS_Store
+Thumbs.db
+
+# Temporäre Dateien
+*.tmp
+*.log

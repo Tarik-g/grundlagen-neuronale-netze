@@ -1,0 +1,110 @@
+# Aufgabe 1
+# Unter den Beispielen aus meinem Buch finden Sie auch das
+# Neuron.py Beispiel. Verändern Sie die Lernregel so, dass es die
+# Perzeptron Lernregel ist.
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+#                 BIAS,x,y
+train  = np.array( [[1,0,0],
+                    [1,1,0],
+                    [1,0,1],
+                    [1,1,1]])
+target = np.array([0,0,0,1]) # AND Operation
+out    = np.array([0,0,0,0])
+weight = np.random.rand(3)*(0.5)
+grad   = np.zeros(3)
+
+def sigmoid(summe): # Transferfunktion
+    return 1.0/(1.0+np.exp(-1.0*summe)) 
+
+def learn():
+    global train, weight, out, target, learnrate
+    # Neuronenausgabe für alle 4 Trainingsmuster berechnen
+    out = sigmoid(np.matmul(train, weight))
+    # Gradienten berechnen
+    grad = np.matmul(train.T,(out-target)) * (out.T.dot(np.subtract(np.ones(4),out)))
+    weight -= learnrate*grad # Gewichte anpassen
+
+
+#------------------------------------------------------------------------------------------------------------------
+# Perzeptron-Lernregel: Gewichte werden nur bei Fehlklassifikation angepasst.
+
+# Bei einem Eingangswert von 0 (oi = 0) hat eine Änderung des Gewichts keinen Einfluss,
+# da der Eingabewert mit dem Lernterm multipliziert wird. Bei einem Eingangswert von 1
+# (oi = 1) wird das Gewicht vergrößert, wenn die Ausgabe kleiner als das Ziel ist
+# (oj < targetj), und verkleinert, wenn die Ausgabe größer als das Ziel ist
+# (oj > targetj).
+
+# Stufe: Perzeptron (harte Entscheidung 0/1)
+def learn_new_stufe():
+    global train, weight, out, target
+
+    for i in range(len(train)):
+        # out berechnen (Stufenfunktion: 0 oder 1)
+        if np.dot(train[i], weight) >= 0:
+            out[i] = 1
+        else:
+            out[i] = 0
+
+        for j in range(len(weight)):
+
+            # -----------------------------
+            # Perzeptron-Lernregel:
+            # -----------------------------
+            # oi = Eingabewert train[i][j]
+            # 1) oi = 0 → keine Änderung
+            # 2) oi = 1 → Gewicht wird angepasst:
+            #    - out < target → Gewicht erhöhen
+            #    - out > target → Gewicht verringern
+            # -----------------------------
+
+            if train[i][j] == 0:
+                delta = 0
+            else:
+                if out[i] < target[i]:
+                    delta = 1
+                elif out[i] > target[i]:
+                    delta = -1
+                else:
+                    delta = 0
+
+            weight[j] += delta
+
+#------------------------------------------------------------------------------------------------------------------
+
+def outp(N=100): # Daten für die Ausgabefunktion generieren
+    global weight
+    x = np.linspace(0, 1, N)
+    y = np.linspace(0, 1, N)
+    xx, yy = np.meshgrid(x, y)
+    oo = sigmoid(weight[0] + weight[1]*xx + weight[2]*yy)
+    return xx, yy, oo
+
+def on_close(event): # Fenster schließen
+    exit(0)
+
+plt.ion()
+fig = plt.figure()
+fig.canvas.mpl_connect('close_event', on_close)
+# while True:   # Endlosschleife
+for i in range(1000):
+    #learn_new_sigmoid()   # lerne einen Schritt # --------------------------------------------------
+    learn_new_stufe() # --------------------------------------------------
+    #DEBUG Zeile
+    print(f"iteration: {i}") # --------------------------------------------------
+    print(f"out: {out}, weight: {weight}")  # --------------------------------------------------
+    plt.clf() # Bildschirm löschen
+    X, Y, Z = outp() # generiere Plotdaten
+    ax = fig.add_subplot(111, projection='3d')
+    # 3D plot von den Daten
+    ax.plot_surface(X, Y, Z, edgecolor='royalblue', 
+        lw=0.5, rstride=8, cstride=8, alpha=0.3)
+    ax.set_title('Neuron lernt AND-Funktion')
+    ax.set_xlabel('In[1]')
+    ax.set_ylabel('In[2]')
+    ax.set_zlabel('Ausgabe\ndes Neurons')
+    ax.set_zlim(0, 1)
+    plt.draw()
+    plt.pause(0.00001)
